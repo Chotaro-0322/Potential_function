@@ -47,10 +47,10 @@ class Potential_function():
     print("range_y is ", self.y_range)
     print("range_z is ", self.z_range)
     # test 大きさを10分の1へ
-    # self.x_range[0] = int(self.x_range[0] / 10)
-    # self.x_range[1] = int(self.x_range[1] / 10)
-    # self.y_range[0] = int(self.y_range[0] / 10)
-    # self.y_range[1] = int(self.y_range[1] / 10)
+    self.x_range[0] = self.x_range[0] / 10
+    self.x_range[1] = self.x_range[1] / 10
+    self.y_range[0] = self.y_range[0] / 10
+    self.y_range[1] = self.y_range[1] / 10
 
     # スタートとゴール
     self.start_x, self.start_y   =  0, 0
@@ -149,6 +149,7 @@ class Potential_function():
 
   def cal_potential_field(self):
     pot = []
+    print("x_range is ", self.x_range)
     print("y_range is ", self.y_range)
     for y_for_pot in tqdm(range(int(self.y_range[0] * 10), int(self.y_range[1] + 1) * 10)):
       y_for_pot /= 10
@@ -270,7 +271,7 @@ class Potential_function():
 
 Potential = Potential_function()
 pot = Potential.cal_potential_field()
-x_plot, y_plot = np.meshgrid(np.arange(Potential.x_range[0], Potential.x_range[1] + 1),np.arange(Potential.y_range[0], Potential.y_range[1] +1))
+x_plot, y_plot = np.meshgrid(np.arange(int(Potential.x_range[0])*10, int(Potential.x_range[1])*10),np.arange(int(Potential.y_range[0])*10, int(Potential.y_range[1])*10))
 Potential.plot3d(pot, x_plot, y_plot, Potential.pcd_copy)
 
 # df = pd.DataFrame(columns=['x','y','vx','vy','obst_x','obst_y'])
