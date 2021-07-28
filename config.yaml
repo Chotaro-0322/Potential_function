@@ -1,0 +1,32 @@
+# They are used to calculate Potential field
+pcd_data : "./shintoshin_210609_2.pcd"
+csv_waypoint : "./210714_shintoshin_lane_1.csv"
+json_data : "./potential_value.json"
+low_z : 2.0 # オブジェクトと認識するz軸の最低値
+upper_z : 2.8 # オブジェクトと認識するz軸の最大値
+weight :
+  obst : 10 # オブジェクトのweight
+  goal : 0 # ゴールのweight (最適経路生成のときに使用)
+potential_range:
+  max : 100 # ポテンシャル場の最大値
+  min : -100 # ポテンシャル場の最小値
+minimum_dist : 3 # オブジェクトと認識する距離範囲 (x, y軸)
+valid_pcd_interval : 0.1 # ポイントのx, y値を0.1ごとに補正 (選択肢: 1, 0.1, 0.01, ....)
+obscan_cls : 
+  eps : 0.4 # クラスタリングとする点同士の最小距離
+  min_points : 25 # クラスタリングでクラスタと認める点の数
+affine_x_rot : 2.0 # pcdマップがx軸回りで傾いていたので, アフィン変換で補正する角度(degree)
+moving_avg : 5 # waypointsのポテンシャル量の移動平均を求めるときの長さ
+
+
+# They are used to calculate Ptential function (making optimaized route)
+# 微分と進むスピード
+delt : 0.1 # 最適経路を進むときの1ステップの移動距離
+speed : 1 # 最適経路を進むときのスピード
+start : 
+  x : 0 # スタート地点 x座標
+  y : 0 # スタート地点　y座標
+goal : 
+  x : 100 # ゴール地点 x座標
+  y : 100 # ゴール地点 y座標
+
