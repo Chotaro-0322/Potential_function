@@ -63,10 +63,10 @@ class Potential_function():
     print("range_y is ", self.y_range)
     print("range_z is ", self.z_range)
     # test 大きさを10分の1へ
-    self.x_range[0] = np.round(self.x_range[0] / 5, decimals=1)
-    self.x_range[1] = np.round(self.x_range[1] / 5, decimals=1)
-    self.y_range[0] = np.round(self.y_range[0] / 5, decimals=1)
-    self.y_range[1] = np.round(self.y_range[1] / 5, decimals=1)
+    # self.x_range[0] = np.round(self.x_range[0] / 5, decimals=1)
+    # self.x_range[1] = np.round(self.x_range[1] / 5, decimals=1)
+    # self.y_range[0] = np.round(self.y_range[0] / 5, decimals=1)
+    # self.y_range[1] = np.round(self.y_range[1] / 5, decimals=1)
 
     # スタートとゴール
     self.start_x, self.start_y   =  0, 0
