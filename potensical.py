@@ -8,6 +8,7 @@ import matplotlib.rcsetup as rcsetup
 import matplotlib
 import open3d as o3d
 from tqdm import tqdm
+import csv
 
 from mayavi import mlab
 
@@ -17,7 +18,14 @@ from mayavi import mlab
 
 class Potential_function():
   def __init__(self):
-    # pcdの読み込み
+    df_waypoints = self.read_csv("./210714_shintoshin_lane_1.csv")
+    self.waypoints = df_waypoints.loc[:, ["x", "y", "z"]].values
+    # x軸方向にマップが傾いていたので, アフィン変換により修正
+    self.waypoints = self.affine(self.waypoints, 2.0)
+    self.waypoints = np.round(self.waypoints, decimals=1)
+    print("self.waypoints is ", self.waypoints)
+
+    #  pcdの読み込み
     pcd = o3d.io.read_point_cloud("./shintoshin_210609_2.pcd")
     print("pcd data is ", pcd)
     pcd_down_samp = pcd.voxel_down_sample(voxel_size=0.1)
@@ -36,10 +44,6 @@ class Potential_function():
 
     print("pcd_np is ", pcd_np.shape)
 
-    # Test
-    # pcd_np = pcd_np[pcd_np[:, 2] < 100]
-    # pcd_np = pcd_np[pcd_np[:, 2] > -200]
-    
     # x軸方向にマップが傾いていたので, アフィン変換により修正
     pcd_np = self.affine(pcd_np, 2.0)
 
@@ -63,10 +67,15 @@ class Potential_function():
     print("range_y is ", self.y_range)
     print("range_z is ", self.z_range)
     # test 大きさを10分の1へ
-    self.x_range[0] = np.round(self.x_range[0] / 5, decimals=1)
-    self.x_range[1] = np.round(self.x_range[1] / 5, decimals=1)
-    self.y_range[0] = np.round(self.y_range[0] / 5, decimals=1)
-    self.y_range[1] = np.round(self.y_range[1] / 5, decimals=1)
+    # self.x_range[0] = np.round(self.x_range[0] / 5, decimals=1)
+    # self.x_range[1] = np.round(self.x_range[1] / 5, decimals=1)
+    # self.y_range[0] = np.round(self.y_range[0] / 5, decimals=1)
+    # self.y_range[1] = np.round(self.y_range[1] / 5, decimals=1)
+    # self.waypoints = np.array([points for points in self.waypoints if (self.x_range[0] < points[0]) 
+    #                                                           & (self.x_range[1] > points[0])
+    #                                                           & (self.y_range[0] < points[1])
+    #                                                           & (self.y_range[1] > points[1])
+    #                                                           ])
 
     # スタートとゴール
     self.start_x, self.start_y   =  0, 0
@@ -96,6 +105,11 @@ class Potential_function():
     #取得間隔(m)
     self.interval = 0.1
 
+  
+  def read_csv(self, csv_name):
+    df = pd.read_csv(csv_name)
+    # print("df is \n", df)
+    return df
 
   def affine(self, pcd_points, rotate):
     pcd_x = pcd_points[:, 0]
@@ -232,6 +246,27 @@ class Potential_function():
     return pot
 
 
+  def cal_waypoints_weight(self, waypoints, xm, ym, U):
+    print("U is ", U)
+    print("xm is ", xm[0])
+    print("ym is ", ym.T[0])
+    print("ym shape is ", ym.T[0].shape)
+    print("waypoints shape is ", waypoints.shape)
+    for i, points in enumerate(waypoints):
+      print("points is ", points)
+      print("match point is ", np.where(xm[0] == points[0])[0])
+      x_pos = np.where(xm[0] == points[0])[0]
+      y_pos = np.where(ym.T[0] == points[1])[0]
+      print("x_pos is ", x_pos)
+      print("y_pos is ", y_pos)
+      print("U[x, y] is ", U[y_pos, x_pos])
+      if i == 0:
+        waypoints_array = U[y_pos, x_pos]
+      else:
+        waypoints_array = np.append(waypoints_array, U[y_pos, x_pos])
+    return waypoints_array
+      
+
   #ルートをdfに代入
   # def cal_route(self, x, y, df):
   #   count = 0
@@ -305,6 +340,8 @@ class Potential_function():
       print("pcd_cord is\n", pcd_cord[:, 0].shape)
       print("pcd_cord is\n", pcd_cord[:, 1].shape)
       print("pcd_cord is\n", pcd_cord[:, 2].shape)
+      print("pcd_cord xm is\n", xm)
+      print("pcd_cord ymis\n", ym)
       print("pcd_cord xm is\n", xm.shape)
       print("pcd_cord ymis\n", ym.shape)
       print("pcd_cord U is\n", U.shape)
@@ -313,19 +350,29 @@ class Potential_function():
       # scat = ax.scatter(pcd_cord[:, 0], pcd_cord[:, 1], pcd_cord[:, 2], s = 0.001, alpha=0.2)
       # plt.show()
 
+      waypoints_weight = self.cal_waypoints_weight(self.waypoints, xm, ym, U)
       #mayavi
       pcd_onzero = pcd_cord[(pcd_cord[:, 2] >= self.low_z) & (pcd_cord[:, 2] < self.upper_z)]
       pcd_underzero = pcd_cord[pcd_cord[:, 2] < self.low_z]
       pcd_onlimit = pcd_cord[pcd_cord[:, 2] >= self.upper_z]
-      mlab.points3d(pcd_onzero[:, 0], pcd_onzero[:, 1], pcd_onzero[:, 2], scale_factor=0.1, color=(0, 1, 0))
+      mlab.points3d(pcd_onzero[:, 0], pcd_onzero[:, 1], pcd_onzero[:, 2], scale_factor=0.05, color=(0, 1, 0))
       mlab.points3d(pcd_underzero[:, 0], pcd_underzero[:, 1], pcd_underzero[:, 2], scale_factor=0.1, color=(1, 1, 1))
-      mlab.points3d(pcd_onlimit[:, 0], pcd_onlimit[:, 1], pcd_onlimit[:, 2], scale_factor=0.1, color=(1, 1, 1))
+      mlab.points3d(pcd_onlimit[:, 0], pcd_onlimit[:, 1], pcd_onlimit[:, 2], scale_factor=0.05, color=(1, 1, 1))
       U -= 1
+      print("self.waypoints shape is ", self.waypoints.shape)
+      print("waypoints_weight shape is ", waypoints_weight.shape)
+      waypoint_w_min = waypoints_weight.min()
+      waypoint_w_max = waypoints_weight.max()
+      waypoints_weight = (waypoints_weight - waypoint_w_min) / (waypoint_w_max - waypoint_w_min)
+      print("waypoint_min is ", waypoint_w_min)
+      print("waypoint_max is ", waypoint_w_max)
+      print("waypoints_weight is ", waypoints_weight)
+      # mlab.points3d(self.waypoints[:, 0], self.waypoints[:, 1], waypoints_weight, scale_factor=0.5, colormap="cool")
+      [mlab.points3d(waypoint[0], waypoint[1], waypoint_w + 2, scale_factor=0.5, color=(waypoint_w, 0, 1 - waypoint_w)) for waypoint, waypoint_w in zip(self.waypoints, waypoints_weight)]
       surf = mlab.mesh(xm, ym, U, colormap="cool")
       lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
       lut[:, -1] = np.linspace(50, 100, 256)
       surf.module_manager.scalar_lut_manager.lut.table = lut
-
       mlab.show()
 
 Potential = Potential_function()
@@ -333,6 +380,8 @@ pot = Potential.cal_potential_field()
 print("Potential.np.arange x_range is ", np.arange(Potential.x_range[0], Potential.x_range[1] + 0.1, 0.1))
 print("Potential.np.arange y_range is ", np.arange(Potential.y_range[0], Potential.y_range[1] + 0.1, 0.1))
 x_plot, y_plot = np.meshgrid(np.arange(Potential.x_range[0], Potential.x_range[1] + 0.1, 0.1),np.arange(Potential.y_range[0], Potential.y_range[1] + 0.1, 0.1))
+x_plot = np.round(x_plot, decimals=1)
+y_plot = np.round(y_plot, decimals=1)
 Potential.plot3d(pot, x_plot, y_plot, Potential.pcd_copy)
 
 # df = pd.DataFrame(columns=['x','y','vx','vy','obst_x','obst_y'])
