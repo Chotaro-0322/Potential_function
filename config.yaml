@@ -20,7 +20,7 @@ obscan_cls :
   min_points : 25 # クラスタリングでクラスタと認める点の数
 affine_x_rot : 2.0 # pcdマップがx軸回りで傾いていたので, アフィン変換で補正する角度(degree)
 moving_avg : 5 # waypointsのポテンシャル量の移動平均を求めるときの長さ
-look_ahead_dist_min : 1.5
+look_ahead_dist_min : 2.0
 look_ahead_dist_max : 3.5
 
 
