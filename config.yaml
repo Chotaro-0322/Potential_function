@@ -21,7 +21,7 @@ obscan_cls :
 affine_x_rot : 2.0 # pcdマップがx軸回りで傾いていたので, アフィン変換で補正する角度(degree)
 moving_avg : 5 # waypointsのポテンシャル量の移動平均を求めるときの長さ
 look_ahead_dist_min : 1.5
-look_ahead_dist_max : 3
+look_ahead_dist_max : 3.5
 
 
 # They are used to calculate Ptential function (making optimaized route)
