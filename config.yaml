@@ -1,12 +1,12 @@
 # They are used to calculate Potential field
-pcd_data : "./data/itolab/210615_5goukan_itolab.pcd"
-csv_waypoint : "./data/itolab/210715_lane_change_1.csv"
+pcd_data : "./data/shintoshin/shintoshin_210609_2_erase_human.pcd"
+csv_waypoint : "./data/shintoshin/shintoshin_weight_waypoint.csv"
 json_data : "./potential_value.json"
 weight_waypoint_csv : "./weight_waypoint.csv"
 
 # さいたま新都心設定 z = 2.0 ~ 2.8
-low_z : 1.0 # オブジェクトと認識するz軸の最低値
-upper_z : 1.5 # オブジェクトと認識するz軸の最大値
+low_z : 2.0 # オブジェクトと認識するz軸の最低値
+upper_z : 2.8 # オブジェクトと認識するz軸の最大値
 weight :
   obst : 10 # オブジェクトのweight
   goal : 0 # ゴールのweight (最適経路生成のときに使用)
@@ -15,6 +15,7 @@ potential_range:
   min : -100 # ポテンシャル場の最小値
 minimum_dist : 3 # オブジェクトと認識する距離範囲 (x, y軸)
 valid_pcd_interval : 0.1 # ポイントのx, y値を0.1ごとに補正 (選択肢: 1, 0.1, 0.01, ....)
+# さいたま新都心設定 eps = 0.4, min_points :25
 obscan_cls : 
   eps : 0.4 # クラスタリングとする点同士の最小距離
   min_points : 25 # クラスタリングでクラスタと認める点の数
