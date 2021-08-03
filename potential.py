@@ -292,6 +292,7 @@ class Potential_function():
     waypoint_w_min = waypoints_weight.min()
     waypoint_w_max = waypoints_weight.max()
     waypoints_weight = (waypoints_weight - waypoint_w_min) / (waypoint_w_max - waypoint_w_min)
+    print("waypoints_weight is ", waypoints_weight)
     # mlab.points3d(self.waypoints[:, 0], self.waypoints[:, 1], waypoints_weight, scale_factor=0.5, colormap="cool")
     [mlab.points3d(waypoint[0], waypoint[1], waypoint_w + 2, scale_factor=0.5, color=(waypoint_w, 0, 1 - waypoint_w)) for waypoint, waypoint_w in zip(self.waypoints, waypoints_weight)]
     surf = mlab.mesh(xm, ym, U, colormap="cool")

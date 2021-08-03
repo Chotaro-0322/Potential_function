@@ -30,6 +30,8 @@ class Potential_display():
 
         self.moving_avg = cfg["moving_avg"]
 
+        self.lookahead_min = cfg["look_ahead_dist_min"]
+
     def affine(self, pcd_points, rotate):
         pcd_x = pcd_points[:, 0]
         pcd_y = pcd_points[:, 1] * np.cos(np.deg2rad(rotate)) - pcd_points[:, 2] * np.sin(np.deg2rad(rotate))
@@ -63,9 +65,13 @@ class Potential_display():
         df_waypoints = pd.read_csv(csv_name)
         # print("df is \n", df)
         waypoints = df_waypoints.loc[:, ["x", "y", "z"]].values
+        lookahead = df_waypoints["look_ahead"].values
+        lookahead = np.array(lookahead)
+        print("lookahead is ", lookahead.shape)
         waypoints = self.affine(waypoints, self.affine_x_rot)
         waypoints = np.round(waypoints, decimals=self.decimals)
-        return waypoints
+        print("waypoints is ", waypoints)
+        return waypoints, lookahead
 
     def read_json(self, json_name):
         with open(json_name, mode="r", encoding="utf-8") as file:
@@ -91,9 +97,10 @@ class Potential_display():
         moving_ave = pd_weight.rolling(window=moving_range, min_periods=1, center=True).mean()
         return moving_ave.values
 
-    def plot3d(self, xm, ym, U, pcd_cord, waypoints, low_z = 2.0, upper_z = 2.8):
-        waypoints_weight = self.cal_waypoints_weight(waypoints, xm, ym, U)
-        waypoints_weight = self.waypoint_moving_average(waypoints_weight, self.moving_avg)
+    def plot3d(self, xm, ym, U, pcd_cord, waypoints, lookahead, low_z = 2.0, upper_z = 2.8):
+        # waypoints_weight = self.cal_waypoints_weight(waypoints, xm, ym, U)
+        # waypoints_weight = self.waypoint_moving_average(waypoints_weight, self.moving_avg)
+        print("lookahead dist is ", lookahead)
         
         pcd_onzero = pcd_cord[(pcd_cord[:, 2] >= low_z) & (pcd_cord[:, 2] < upper_z)]
         pcd_underzero = pcd_cord[pcd_cord[:, 2] < low_z]
@@ -102,10 +109,17 @@ class Potential_display():
         mlab.points3d(pcd_underzero[:, 0], pcd_underzero[:, 1], pcd_underzero[:, 2], scale_factor=0.1, color=(1, 1, 1))
         mlab.points3d(pcd_onlimit[:, 0], pcd_onlimit[:, 1], pcd_onlimit[:, 2], scale_factor=0.05, color=(1, 1, 1))
         U -= 1
-        waypoint_w_min = waypoints_weight.min()
-        waypoint_w_max = waypoints_weight.max()
-        waypoints_weight = (waypoints_weight - waypoint_w_min) / (waypoint_w_max - waypoint_w_min)
-        [mlab.points3d(point[0], point[1], waypoint_w + 2, scale_factor=0.5, color=(waypoint_w, 0, 1 - waypoint_w)) for point, waypoint_w in zip(waypoints, waypoints_weight)]
+        # waypoint_w_min = waypoints_weight.min()
+        # waypoint_w_max = waypoints_weight.max()
+        # waypoints_weight = (waypoints_weight - waypoint_w_min) / (waypoint_w_max - waypoint_w_min)
+        print("lookahead, ", lookahead.shape)
+        print("waypoints, ", waypoints.shape)
+        lookahead_max = lookahead.max()
+        lookahead_min = lookahead.min()
+        
+        lookahead = (lookahead - lookahead_min) / (lookahead_max - lookahead_min)
+
+        [mlab.points3d(point[0], point[1], waypoint_w + 2, scale_factor=0.5, color=(waypoint_w, 0, 1 - waypoint_w)) for point, waypoint_w in zip(waypoints, lookahead)]
         surf = mlab.mesh(xm, ym, U, colormap="cool")
         lut = surf.module_manager.scalar_lut_manager.lut.table.to_array()
         lut[:, -1] = np.linspace(50, 100, 256)
@@ -120,9 +134,9 @@ def main():
 
     pcd_np, pcd_copy = Potential_dis.read_pcd(cfg["pcd_data"], low_z=cfg["low_z"], upper_z=cfg["upper_z"])
     xm, ym, U = Potential_dis.read_json(cfg["json_data"])
-    waypoints = Potential_dis.read_csv_waypoint(cfg["csv_waypoint"])
+    waypoints, lookahead = Potential_dis.read_csv_waypoint(cfg["weight_waypoint_csv"])
 
-    Potential_dis.plot3d(xm, ym, U, pcd_copy, waypoints, low_z=cfg["low_z"], upper_z=cfg["upper_z"])
+    Potential_dis.plot3d(xm, ym, U, pcd_copy, waypoints, lookahead, low_z=cfg["low_z"], upper_z=cfg["upper_z"])
 
 if __name__=="__main__":
     main()

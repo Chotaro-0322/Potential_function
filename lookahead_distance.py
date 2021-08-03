@@ -15,9 +15,13 @@ class Add_potential_tocsv():
         self.affine_x_rot = cfg["affine_x_rot"]
 
         self.moving_avg = cfg["moving_avg"]
+        self.moving_linear = cfg["linear_judgement"]
 
         self.lookahead_min = cfg["look_ahead_dist_min"]
         self.lookahead_max = cfg["look_ahead_dist_max"]
+
+        self.T = cfg["response_T"]
+        self.linear_ratio = cfg["linear_ratio"]
 
     def affine(self, pcd_points, rotate):
         pcd_x = pcd_points[:, 0]
@@ -32,8 +36,9 @@ class Add_potential_tocsv():
         # print("df is \n", df)
         waypoints = df_waypoints.loc[:, ["x", "y", "z"]].values
         waypoints = self.affine(waypoints, self.affine_x_rot)
-        waypoints = np.round(waypoints, decimals=self.decimals)
-        return waypoints, df_waypoints
+        waypoints_raw = np.round(waypoints, decimals=self.decimals)
+        linear_judge_waypoints = np.round(waypoints, decimals=self.decimals + 3)
+        return waypoints_raw, df_waypoints, linear_judge_waypoints
     
     def write_csv_waypoint(self, csv_name, data, df_data):
         data = np.round(data, decimals=1)
@@ -66,18 +71,82 @@ class Add_potential_tocsv():
         moving_ave = pd_weight.rolling(window=moving_range, min_periods=1, center=True).mean()
         return moving_ave.values
 
-    def cal_weight(self, xm, ym, U, waypoints):
+    def waypoint_moving_linear(self, waypoint, waypoint_weight, moving_range):
+        linear_avg = []
+        # print("waypoint is ", waypoint)
+        print("waypoint_weight", waypoint_weight)
+        print("moving_range is ", moving_range)
+        for i in range(len(waypoint) - moving_range - 1):
+            tan_list = []
+            for j in range(moving_range):
+                # print("current x, y ", waypoint[i + j, 0], "   ", waypoint[i + j, 1])
+                # print("next    x, y ", waypoint[i + j + 1, 0], "   ", waypoint[i + j + 1, 1])
+                x_length = waypoint[i + j + 1, 0] - waypoint[i + j, 0]
+                y_length = waypoint[i + j + 1, 1] - waypoint[i + j, 1]
+                current_degree = np.degrees(np.arctan2(y_length, x_length))
+                # print("current_Degree is", current_degree)
+                if j != 0:
+                    degree = current_degree - previous_degree
+                else:
+                    degree = 0
+                previous_degree = current_degree
+                tan_list.append(degree)
+            # print("tan_list is ", tan_list)
+            tan_array = np.array(tan_list)
+            linear_avg.append(np.mean(tan_list[1:]))
+        linear_avg = np.abs(np.array(linear_avg))
+
+        # 計算がまだできていないmoving_range分を補間
+        for i in range(moving_range + 1):
+            linear_avg = np.append(linear_avg, linear_avg[-1])
+
+        # 1次遅れ応答によって基準を設定
+        delayed_response = [(1 - np.power(np.e, -x_ / self.T )) for x_ in linear_avg]
+        delayed_response = np.array(delayed_response)
+        # print("delayed_response is ", delayed_response)
+        # print("delayed_response shape is ", delayed_response.shape)
+        # print("waypoint_weight is ", waypoint_weight.shape)
+        print("delayed_response is ", delayed_response)
+
+        result_linear_judge = []
+        for potential, linear_w in zip(waypoint_weight, delayed_response):
+            print("potential is ", potential)
+            print("linear is ", linear_w)
+            reslult_judge = potential + linear_w * self.linear_ratio
+            result_linear_judge.append(reslult_judge)
+
+        result_linear_judge = np.array(result_linear_judge)
+        
+        result_linear_min = result_linear_judge.min()
+        result_linear_max = result_linear_judge.max()
+
+        result_linear_judge = (result_linear_judge - result_linear_min) / (result_linear_max - result_linear_min)
+        print("result_linear_judge is ", result_linear_judge)
+
+        return result_linear_judge
+
+    def cal_weight(self, xm, ym, U, waypoints, linear_judge_waypoints):
         waypoints_weight = self.cal_waypoints_weight(waypoints, xm, ym, U)
-        waypoints_weight = self.waypoint_moving_average(waypoints_weight, self.moving_avg)
+        print("waypoints_weight shape is ", waypoints_weight.shape)
         
         waypoint_w_min = waypoints_weight.min()
         waypoint_w_max = waypoints_weight.max()
+        
         waypoints_weight = (waypoints_weight - waypoint_w_min) / (waypoint_w_max - waypoint_w_min)
 
-        diff_lookahead = self.lookahead_max - self.lookahead_min
-        waypoints_lookahead = waypoints_weight * diff_lookahead + self.lookahead_min
-        print("lookahead_dist is ", waypoints_lookahead)
-        return waypoints_lookahead
+        waypoints_weight = self.waypoint_moving_linear(linear_judge_waypoints, waypoints_weight, self.moving_linear)
+        
+        waypoint_w_min = waypoints_weight.min()
+        waypoint_w_max = waypoints_weight.max()
+        
+        waypoints_weight = (waypoints_weight - waypoint_w_min) / (waypoint_w_max - waypoint_w_min)
+        
+        waypoints_weight = self.waypoint_moving_average(waypoints_weight, self.moving_avg)
+
+        # diff_lookahead = self.lookahead_max - self.lookahead_min
+        # waypoints_lookahead = waypoints_weight * diff_lookahead + self.lookahead_min
+        print("lookahead_dist is ", waypoints_weight)
+        return waypoints_weight
 
 def main():
     with open("./config.yaml") as file:
@@ -86,10 +155,10 @@ def main():
     Potential = Add_potential_tocsv(cfg)
 
     xm, ym, U = Potential.read_json(cfg["json_data"])
-    waypoints, df_waypoints = Potential.read_csv_waypoint(cfg["csv_waypoint"])
+    waypoints, df_waypoints, linear_judge_waypoints = Potential.read_csv_waypoint(cfg["csv_waypoint"])
 
-    waypoints_lookahead = Potential.cal_weight(xm, ym, U, waypoints)
-    
+    waypoints_lookahead = Potential.cal_weight(xm, ym, U, waypoints, linear_judge_waypoints)
+    print("waypoints_lookahead distance is  ", waypoints_lookahead.shape)
     Potential.write_csv_waypoint(cfg["weight_waypoint_csv"], waypoints_lookahead, df_waypoints)
     # with open(cfg["weight_waypoints_csv"]) as file:
 

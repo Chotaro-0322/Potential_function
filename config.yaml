@@ -35,3 +35,7 @@ goal :
   x : 100 # ゴール地点 x座標
   y : 100 # ゴール地点 y座標
 
+linear_judgement : 3 # 何ポイント先まで曲がっているかどうかを判別する
+linear_ratio : 1 # 直線orカーブの判断のウェイト
+response_T : 5 # 直線orカーブの一時遅れ応答の時定数Tの値
+
