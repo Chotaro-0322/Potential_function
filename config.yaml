@@ -1,12 +1,13 @@
 # They are used to calculate Potential field
-pcd_data : "./data/shintoshin/shintoshin_210609_2_erase_human.pcd"
-csv_waypoint : "./data/shintoshin/shintoshin_weight_waypoint.csv"
-json_data : "./potential_value.json"
-weight_waypoint_csv : "./weight_waypoint.csv"
+pcd_data : "./data/itolab/210615_5goukan_itolab.pcd"
+csv_waypoint : "./data/itolab/210715_lane_change_1.csv"
+json_data : "./potential_value_itolab_lane1.json"
+weight_waypoint_csv : "./data/shintoshin/weight_waypoint_itolab_lane1.csv"
 
 # さいたま新都心設定 z = 2.0 ~ 2.8
-low_z : 2.0 # オブジェクトと認識するz軸の最低値
-upper_z : 2.8 # オブジェクトと認識するz軸の最大値
+# itolab z = 0.7 ~ 1.5
+low_z : 0.7 # オブジェクトと認識するz軸の最低値
+upper_z : 1.5 # オブジェクトと認識するz軸の最大値
 weight :
   obst : 10 # オブジェクトのweight
   goal : 0 # ゴールのweight (最適経路生成のときに使用)
