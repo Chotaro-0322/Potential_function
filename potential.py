@@ -96,7 +96,7 @@ class Potential_function():
       waypoints = np.round(waypoints, decimals=self.decimals)
       return waypoints
 
-  def affine(self, pcd_points, rotate):
+  def affine(self, pcd_points, rotate : float):
     pcd_x = pcd_points[:, 0]
     pcd_y = pcd_points[:, 1] * np.cos(np.deg2rad(rotate)) - pcd_points[:, 2] * np.sin(np.deg2rad(rotate))
     pcd_z = pcd_points[:, 1] * np.sin(np.deg2rad(rotate)) + pcd_points[:, 2] * np.cos(np.deg2rad(rotate))
