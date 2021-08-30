@@ -32,6 +32,7 @@ class Potential_display():
 
         self.lookahead_min = cfg["look_ahead_dist_min"]
 
+
     def affine(self, pcd_points, rotate):
         pcd_x = pcd_points[:, 0]
         pcd_y = pcd_points[:, 1] * np.cos(np.deg2rad(rotate)) - pcd_points[:, 2] * np.sin(np.deg2rad(rotate))

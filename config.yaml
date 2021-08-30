@@ -1,8 +1,8 @@
 # They are used to calculate Potential field
-pcd_data : "./data/OC_project/U_OC_omiya_3F_verkimura_ver12.pcd"
-csv_waypoint : "./data/OC_project/OC_omiya_3F_verkimura_ver3.csv"
-json_data : "./OC_potential_value_lane1.json"
-weight_waypoint_csv : "./data/OC_project/U_OC_project_3F_verkimura_ver3.csv"
+pcd_data : "./data/itolab/210615_5goukan_itolab.pcd"
+csv_waypoint : "./data/itolab/weight_waypoint_itolab_lane1.csv"
+json_data : "./itolab_value_lane1.json"
+weight_waypoint_csv : "./data/itolab/weight_waypoint_itolab_lane1_ver2.csv"
 
 # さいたま新都心設定 z = 2.0 ~ 2.8
 # itolab z = 0.7 ~ 1.5
@@ -23,8 +23,10 @@ obscan_cls :
   min_points : 15 # クラスタリングでクラスタと認める点の数
 affine_x_rot : 2.0 # pcdマップがx軸回りで傾いていたので, アフィン変換で補正する角度(degree)
 moving_avg : 5 # waypointsのポテンシャル量の移動平均を求めるときの長さ
-look_ahead_dist_min : 2.0
+look_ahead_dist_min : 2.0 # look_ahead_distanceの上限
 look_ahead_dist_max : 3.5
+speed_min : 2.5 # speedの上限
+speed_max : 8.5
 
 
 # They are used to calculate Ptential function (making optimaized route)

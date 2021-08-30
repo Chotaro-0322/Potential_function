@@ -23,6 +23,9 @@ class Add_potential_tocsv():
         self.T = cfg["response_T"]
         self.linear_ratio = cfg["linear_ratio"]
 
+        self.speed_min = cfg["speed_min"]
+        self.speed_max = cfg["speed_max"]
+
     def affine(self, pcd_points, rotate):
         pcd_x = pcd_points[:, 0]
         pcd_y = pcd_points[:, 1] * np.cos(np.deg2rad(rotate)) - pcd_points[:, 2] * np.sin(np.deg2rad(rotate))
@@ -40,9 +43,10 @@ class Add_potential_tocsv():
         linear_judge_waypoints = np.round(waypoints, decimals=self.decimals + 3)
         return waypoints_raw, df_waypoints, linear_judge_waypoints
     
-    def write_csv_waypoint(self, csv_name, data, df_data):
+    def write_csv_waypoint(self, csv_name, data, df_data, waypoints_speed):
         data = np.round(data, decimals=1)
         df_data["look_ahead"] = list(data)
+        df_data["velocity"] = list(waypoints_speed)
         print("df_data is \n", df_data)
         df_data.to_csv(csv_name, index=False)
 
@@ -143,10 +147,12 @@ class Add_potential_tocsv():
         
         waypoints_weight = self.waypoint_moving_average(waypoints_weight, self.moving_avg)
 
+        waypoints_speed = (self.speed_max - self.speed_min) * (1 - waypoints_weight) + self.speed_min
+
         # diff_lookahead = self.lookahead_max - self.lookahead_min
         # waypoints_lookahead = waypoints_weight * diff_lookahead + self.lookahead_min
         print("lookahead_dist is ", waypoints_weight)
-        return waypoints_weight
+        return waypoints_weight, waypoints_speed
 
 def main():
     with open("./config.yaml") as file:
@@ -157,9 +163,9 @@ def main():
     xm, ym, U = Potential.read_json(cfg["json_data"])
     waypoints, df_waypoints, linear_judge_waypoints = Potential.read_csv_waypoint(cfg["csv_waypoint"])
 
-    waypoints_lookahead = Potential.cal_weight(xm, ym, U, waypoints, linear_judge_waypoints)
+    waypoints_lookahead, waypoints_speed = Potential.cal_weight(xm, ym, U, waypoints, linear_judge_waypoints)
     print("waypoints_lookahead distance is  ", waypoints_lookahead.shape)
-    Potential.write_csv_waypoint(cfg["weight_waypoint_csv"], waypoints_lookahead, df_waypoints)
+    Potential.write_csv_waypoint(cfg["weight_waypoint_csv"], waypoints_lookahead, df_waypoints, waypoints_speed)
     # with open(cfg["weight_waypoints_csv"]) as file:
 
     
