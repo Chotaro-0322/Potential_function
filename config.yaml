@@ -1,14 +1,14 @@
 # They are used to calculate Potential field
-pcd_data : "./data/itolab/210615_5goukan_itolab.pcd"
-csv_waypoint : "./data/itolab/weight_waypoint_itolab_lane1.csv"
-json_data : "./itolab_value_lane1.json"
-weight_waypoint_csv : "./data/itolab/weight_waypoint_itolab_lane1_ver2.csv"
+pcd_data : "./data/shintoshin/shintoshin_210609_2_erase_human.pcd"
+csv_waypoint : "./data/shintoshin/shintoshin_lane2_0.5_last.csv"
+json_data : "./data/shintoshin/shintoshin_json_route1.json"
+weight_waypoint_csv : "./data/shintoshin/UW_weight_waypoint_shintoshin_route2_0.5.csv"
 
 # さいたま新都心設定 z = 2.0 ~ 2.8
 # itolab z = 0.7 ~ 1.5
 # OC_project_verkimura z = 1.5 ~ 2.0
-low_z : 1.5 # オブジェクトと認識するz軸の最低値
-upper_z : 2.0 # オブジェクトと認識するz軸の最大値
+low_z : 2.0 # オブジェクトと認識するz軸の最低値
+upper_z : 2.8 # オブジェクトと認識するz軸の最大値
 weight :
   obst : 10 # オブジェクトのweight
   goal : 0 # ゴールのweight (最適経路生成のときに使用)
@@ -20,14 +20,14 @@ valid_pcd_interval : 0.1 # ポイントのx, y値を0.1ごとに補正 (選択�
 # さいたま新都心設定 eps = 0.4, min_points :25
 obscan_cls : 
   eps : 0.4 # クラスタリングとする点同士の最小距離
-  min_points : 15 # クラスタリングでクラスタと認める点の数
+  min_points : 25 # クラスタリングでクラスタと認める点の数
 affine_x_rot : 2.0 # pcdマップがx軸回りで傾いていたので, アフィン変換で補正する角度(degree)
 moving_avg : 5 # waypointsのポテンシャル量の移動平均を求めるときの長さ
 look_ahead_dist_min : 2.0 # look_ahead_distanceの上限
 look_ahead_dist_max : 3.5
-speed_min : 2.5 # speedの上限
-speed_max : 8.5
-
+speed_min : 2.0 # speedの上限
+speed_max : 7.0
+lookahead_point : 10 # 何個先のポテンシャルwaypointを経路に反映するかを決定する
 
 # They are used to calculate Ptential function (making optimaized route)
 # 微分と進むスピード

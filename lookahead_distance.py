@@ -26,6 +26,8 @@ class Add_potential_tocsv():
         self.speed_min = cfg["speed_min"]
         self.speed_max = cfg["speed_max"]
 
+        self.lookahead_waypoint = cfg["lookahead_point"]
+
     def affine(self, pcd_points, rotate):
         pcd_x = pcd_points[:, 0]
         pcd_y = pcd_points[:, 1] * np.cos(np.deg2rad(rotate)) - pcd_points[:, 2] * np.sin(np.deg2rad(rotate))
@@ -60,10 +62,17 @@ class Add_potential_tocsv():
         return xm, ym, U
 
     def cal_waypoints_weight(self, waypoints, xm, ym, U):
-        for i, points in enumerate(waypoints):
-            x_pos = np.where(xm[0] == points[0])[0]
-            y_pos = np.where(ym.T[0] == points[1])[0]
-            if i == 0:
+        print("waypoints is ", waypoints.shape[0])
+        for points_num in range(waypoints.shape[0]):
+            points_look = points_num + self.lookahead_waypoint
+            if points_look < waypoints.shape[0]:
+                x_pos = np.where(xm[0] == waypoints[points_look][0])[0]
+                y_pos = np.where(ym.T[0] == waypoints[points_look][1])[0]
+            else :
+                x_pos = np.where(xm[0] == waypoints[waypoints.shape[0] - 1][0])[0]
+                y_pos = np.where(ym.T[0] == waypoints[waypoints.shape[0] - 1][1])[0]
+
+            if points_num == 0:
                 waypoints_array = U[y_pos, x_pos]
             else:
                 waypoints_array = np.append(waypoints_array, U[y_pos, x_pos])
@@ -147,8 +156,13 @@ class Add_potential_tocsv():
         
         waypoints_weight = self.waypoint_moving_average(waypoints_weight, self.moving_avg)
 
-        waypoints_speed = (self.speed_max - self.speed_min) * (1 - waypoints_weight) + self.speed_min
-
+        waypoints_speed = []
+        for waypoints in waypoints_weight:
+            speed = (self.speed_max - self.speed_min) * (1 - waypoints) + self.speed_min
+            if speed > self.speed_max:
+                waypoints_speed.append(self.speed_max)
+            else:
+                waypoints_speed.append(speed)
         # diff_lookahead = self.lookahead_max - self.lookahead_min
         # waypoints_lookahead = waypoints_weight * diff_lookahead + self.lookahead_min
         print("lookahead_dist is ", waypoints_weight)
